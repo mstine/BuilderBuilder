@@ -1,10 +1,9 @@
 import org.apache.commons.lang.StringUtils;
 
+@Grab(group='commons-lang', module='commons-lang', version='[2.4,2.4]')
 class DtoBuilder {
 	
 	static {
-		groovy.grape.Grape.grab(group:'commons-lang', module:'commons-lang', version:'[2.4,2.4]')
-
 		String.metaClass.capitalize = {
 		   StringUtils.capitalize(delegate)
 		}
