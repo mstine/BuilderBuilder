@@ -3,11 +3,9 @@ def bldr = new DtoBuilder()
 println bldr.build {
 	packageName 'edu.bogusu.registration'
 	name 'Student'
-	fields {
-		id 'String'
-		firstName 'String'
-		lastName 'String'
-		hoursEarned 'int'
-		gpa 'float'
-	}
+	field(name:'id', type:'String')
+	field(name:'firstName', type:'String')
+	field(name:'lastName', type:'String')
+	field(name:'hoursEarned', type:'int')
+	field(name:'gpa', type:'float')
 }

@@ -14,100 +14,192 @@ class DtoBuilder {
 	def name
 	def fields = [:]
 	
-	def build(closure) {
+	def build(def closure) {
 		closure.delegate = this
 		closure()
 		
-		result << "package ${packageName};\n\n"
-		result << "public class ${name}DTO {\n\n"
+		outputPackageDefinition(0)
 		
-		outputFields(result, 1)
+		outputBlankLine()
 		
-		result << "\n"
+		outputClassDefinition(0)
 		
-		result << "   public static class Builder {\n\n"
+		outputBlankLine()
 		
-		outputFields(result, 2)
+		outputFieldDeclarations(1)
 		
-		result << "\n"
+		outputBlankLine()
+				
+		outputBuilderClassDefinition(1)
 		
-		result << "      private Builder() {}\n\n"
+		outputBlankLine()
 		
-		fields.each { name, type ->
-			result << "      public Builder ${name}(${type} ${name}) {\n"
-			result << "         this.${name} = ${name};\n"
-			result << "         return this;\n"
-			result << "      }\n\n"
-		}
+		outputFieldDeclarations(2)
 		
-		result << "      public ${name}DTO instance() {\n"
-		result << "         return new ${name}DTO (\n"
-		fields.eachWithIndex { name, type, i ->
-			result << "            ${name}"
-			if (i < fields.size() - 1) {
-				result << ","
-			}
-			result << "\n"
-		}
-		result << "         );\n"
-		result << "      }\n"
+		outputBlankLine()
 		
-		result << "   }\n"
+		outputBuilderConstructor(2)
 		
-		result << """
-   public static Builder builder() {
-      return new Builder();
-   }
-"""
-		result << "\n   private ${name}DTO (\n"
+		outputBlankLine()
 		
-		fields.eachWithIndex { name, type, i ->
-			result << "      ${type} ${name}"
-			if (i < fields.size() - 1) {
-				result << ","
-			}
-			result << "\n"
-		}
+		outputFieldBuilders(2)
 		
-		result << "   ) {\n"
+		outputDTOFactory(2)
 		
-		fields.each { name, type ->
-			result << "      this.${name} = ${name};\n"
-		}
+		outputBlockClose(1)
 		
-		result << "   }\n\n"
+		outputBlankLine()
 		
-		fields.each { name, type ->
-			result << "   public ${type} get${name.capitalize()}() {\n"
-			result << "      return ${name};\n"
-			result << "   }\n\n"
-		}
+		outputBuilderFactory(1)
 		
-		result << "}"		
+		outputBlankLine()
+
+		outputDTOConstructor(1)
+		
+		outputBlankLine()
+		
+		outputFieldGetters(1)
+		
+		outputBlockClose(0)	
 	}
 	
-	def outputFields(result, indent) {
+	def outputPackageDefinition(level) {
+		outputIndent(level)
+		result << "package ${packageName};\n"
+	}
+	
+	def outputBlankLine() {
+		result << "\n"
+	}
+	
+	def outputClassDefinition(level) {
+		outputIndent(level)
+		result << "public class ${name}DTO {\n"
+	}
+	
+	def outputFieldDeclarations(level) {
 		fields.each { name, type ->
-			indent.times() {
-				result << "   "
-			}
+			outputIndent(level)
 			result << "private ${type} ${name};\n"			
 		}
 	}
-
+	
+	def outputBuilderClassDefinition(level) {
+		outputIndent(level)
+		result << "public static class Builder {\n"
+	}
+	
+	def outputBuilderConstructor(level) {
+		outputIndent(level)
+		result << "private Builder() {}\n"
+	}
+	
+	def outputFieldBuilders(level) {
+		fields.each { name, type ->
+			outputIndent(level)
+			result << "public Builder ${name}(${type} ${name}) {\n"
+			outputIndent(level+1)
+			result << "this.${name} = ${name};\n"
+			outputIndent(level+1)
+			result << "return this;\n"
+			outputIndent(level)
+			result << "}\n"
+			outputBlankLine()
+		}
+	}
+	
+	def outputDTOFactory(level) {
+		outputIndent(level)
+		result << "public ${name}DTO instance() {\n"
+		outputIndent(level+1)
+		result << "return new ${name}DTO (\n"
+		fields.eachWithIndex { name, type, i ->
+			outputIndent(level+2)
+			result << "${name}"
+			if (i < fields.size() - 1) {
+				result << ","
+			}
+			result << "\n"
+		}
+		outputIndent(level+1)
+		result << ");\n"
+		outputIndent(level)
+		result << "}\n"
+	}
+	
+	def outputBlockClose(level) {
+		outputIndent(level)
+		result << "}\n"
+	}
+	
+	def outputBuilderFactory(level) {
+		outputIndent(level)
+		result << "public static Builder builder() {\n"
+		outputIndent(level+1)
+        result << "return new Builder();\n"
+		outputIndent(level)
+        result << "}\n"
+	}
+	
+	def outputDTOConstructor(level) {
+		outputIndent(level)
+		result << "private ${name}DTO (\n"
+		
+		fields.eachWithIndex { name, type, i ->
+			outputIndent(level+1)
+			result << "${type} ${name}"
+			if (i < fields.size() - 1) {
+				result << ","
+			}
+			result << "\n"
+		}
+		
+		outputIndent(level)
+		result << ") {\n"
+		
+		fields.each { name, type ->
+			outputFieldInitializer(name,level+1)
+		}
+		
+		outputIndent(level)
+		result << "}\n"
+	}
+	
+	def outputFieldGetters(level) {
+		fields.each { name, type ->
+			outputIndent(level)
+			result << "public ${type} get${name.capitalize()}() {\n"
+			outputIndent(level+1)
+			result << "return ${name};\n"
+			outputIndent(level)
+			result << "}\n"
+			outputBlankLine()
+		}
+	}
+	
+	def outputFieldInitializer(name, level) {
+		outputIndent(level)
+		result << "this.${name} = ${name};\n"
+	}
+	
+	def outputIndent(level) {
+		level.times {
+			result << "   "
+		}
+	}
+	
 	def methodMissing(String name, args) {
-		if (name == "packageName") {
-			packageName = args[0]
+		if (name == "packageName" && args[-1] instanceof String) {
+			packageName = args[-1]
 		}	
-		else if (name == "name") {
-			this.name = args[0]
+		else if (name == "name" && args[-1] instanceof String) {
+			this.name = args[-1]
 		}	
-		else if (name == "fields" && args[-1] instanceof Closure) {
-			def theClosure = args[-1]
-			theClosure.delegate = this
-			theClosure()
+		else if (name == "field" && args[-1] instanceof Map) {
+			def theMap = args[-1]
+			fields["${theMap.name}"] = theMap.type
 		} else {
-			fields["${name}"] = args[0]
+			throw new Exception("Improper format.")
 		}
 	}	
 
